@@ -9,7 +9,7 @@ class JoinModel {
   JoinModel({this.isLoading = false, this.isSubmitted = false, this.chatClient, this.identity});
 
   bool get canSubmit {
-    return true;
+    return identity?.isNotEmpty ?? false;
   }
 
   JoinModel copyWith({bool isLoading, bool isSubmitted, ChatClient chatClient, String identity}) {

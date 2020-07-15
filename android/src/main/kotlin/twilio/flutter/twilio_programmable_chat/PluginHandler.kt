@@ -79,19 +79,19 @@ class PluginHandler(private val applicationContext: Context) : MethodCallHandler
             "Channels#getUserChannelsList" -> ChannelsMethods.getUserChannelsList(call, result)
             "Channels#getMembersByIdentity" -> ChannelsMethods.getMembersByIdentity(call, result)
 
-            "Member#getChannel" -> MemberMethods.getChannel(call, result)
             "Member#getUserDescriptor" -> MemberMethods.getUserDescriptor(call, result)
             "Member#getAndSubscribeUser" -> MemberMethods.getAndSubscribeUser(call, result)
             "Member#setAttributes" -> MemberMethods.setAttributes(call, result)
 
-            "Members#getChannel" -> MembersMethods.getChannel(call, result)
+            "Members#getMembersList" -> MembersMethods.getMembersList(call, result)
+            "Members#getMember" -> MembersMethods.getMember(call, result)
             "Members#addByIdentity" -> MembersMethods.addByIdentity(call, result)
             "Members#inviteByIdentity" -> MembersMethods.inviteByIdentity(call, result)
             "Members#removeByIdentity" -> MembersMethods.removeByIdentity(call, result)
 
-            "Message#getChannel" -> MessageMethods.getChannel(call, result)
             "Message#updateMessageBody" -> MessageMethods.updateMessageBody(call, result)
             "Message#setAttributes" -> MessageMethods.setAttributes(call, result)
+            "Message#getMedia" -> MessageMethods.getMedia(call, result)
 
             "Messages#sendMessage" -> MessagesMethods.sendMessage(call, result)
             "Messages#removeMessage" -> MessagesMethods.removeMessage(call, result)
@@ -156,6 +156,12 @@ class PluginHandler(private val applicationContext: Context) : MethodCallHandler
 
     private fun debug(call: MethodCall, result: MethodChannel.Result) {
         val enableNative = call.argument<Boolean>("native")
+        val enableSdk = call.argument<Boolean>("sdk")
+
+        if (enableSdk != null && enableSdk) {
+            ChatClient.setLogLevel(android.util.Log.DEBUG)
+        }
+
         if (enableNative != null) {
             TwilioProgrammableChatPlugin.nativeDebug = enableNative
             result.success(enableNative)

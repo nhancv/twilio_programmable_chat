@@ -39,14 +39,14 @@ object MessagesMethods {
             if (options["mediaProgressListenerId"] != null) {
                 messageOptions.withMediaProgressListener(object : ProgressListener() {
                     override fun onStarted() {
-                        TwilioProgrammableChatPlugin.mediaProgresSink?.success({
+                        TwilioProgrammableChatPlugin.mediaProgressSink?.success({
                             "mediaProgressListenerId" to options["mediaProgressListenerId"]
                             "name" to "started"
                         })
                     }
 
                     override fun onProgress(bytes: Long) {
-                        TwilioProgrammableChatPlugin.mediaProgresSink?.success({
+                        TwilioProgrammableChatPlugin.mediaProgressSink?.success({
                             "mediaProgressListenerId" to options["mediaProgressListenerId"]
                             "name" to "progress"
                             "data" to bytes
@@ -54,7 +54,7 @@ object MessagesMethods {
                     }
 
                     override fun onCompleted(mediaSid: String) {
-                        TwilioProgrammableChatPlugin.mediaProgresSink?.success({
+                        TwilioProgrammableChatPlugin.mediaProgressSink?.success({
                             "mediaProgressListenerId" to options["mediaProgressListenerId"]
                             "name" to "completed"
                             "data" to mediaSid
@@ -259,7 +259,7 @@ object MessagesMethods {
     fun setLastConsumedMessageIndexWithResult(call: MethodCall, result: MethodChannel.Result) {
         val channelSid = call.argument<String>("channelSid")
                 ?: return result.error("ERROR", "Missing 'channelSid'", null)
-        val lastConsumedMessageIndex = call.argument<Long>("lastConsumedMessageIndex")
+        val lastConsumedMessageIndex = call.argument<Int>("lastConsumedMessageIndex")?.toLong()
                 ?: return result.error("ERROR", "Missing 'lastConsumedMessageIndex'", null)
 
         TwilioProgrammableChatPlugin.chatListener.chatClient?.channels?.getChannel(channelSid, object : CallbackListener<Channel>() {

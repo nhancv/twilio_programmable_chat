@@ -61,6 +61,10 @@ class Channel {
   DateTime _lastMessageDate;
 
   int _lastMessageIndex;
+
+  bool _isSubscribed;
+
+  bool _hasSynchronized = false;
   //#endregion
 
   //#region Public API properties
@@ -130,6 +134,16 @@ class Channel {
   Attributes get attributes {
     return _attributes;
   }
+
+  /// True if the channel has, in the lifetime of the ChatClient reached
+  /// ChannelSynchronizationStatus.ALL
+  ///
+  /// This has been added to address the fact that when a user Joins a channel
+  /// That channels synchronization status reverts to IDENTIFIER, and never
+  /// returns to ALL
+  bool get hasSynchronized {
+    return _hasSynchronized;
+  }
   //#endregion
 
   //#region Message events
@@ -137,14 +151,14 @@ class Channel {
 
   /// Called when a [Message] is added to the channel the current user is subscribed to.
   ///
-  /// You could obtain the [Channel] where it was added by using [Message.channel] or [Message.channelSid].
+  /// You could obtain the [Channel] where it was added by using [Message.getChannel] or [Message.channelSid].
   Stream<Message> onMessageAdded;
 
   final StreamController<MessageUpdatedEvent> _onMessageUpdatedCtrl = StreamController<MessageUpdatedEvent>.broadcast();
 
   /// Called when a [Message] is changed in the channel the current user is subscribed to.
   ///
-  /// You could obtain the [Channel] where it was updated by using [Message.channel] or [Message.channelSid].
+  /// You could obtain the [Channel] where it was updated by using [Message.getChannel] or [Message.channelSid].
   /// [Message] change events include body updates and attribute updates.
   Stream<MessageUpdatedEvent> onMessageUpdated;
 
@@ -152,7 +166,7 @@ class Channel {
 
   /// Called when a [Message] is deleted from the channel the current user is subscribed to.
   ///
-  /// You could obtain the [Channel] where it was deleted by using [Message.channel] or [Message.channelSid].
+  /// You could obtain the [Channel] where it was deleted by using [Message.getChannel] or [Message.channelSid].
   Stream<Message> onMessageDeleted;
   //#endregion
 
@@ -161,14 +175,14 @@ class Channel {
 
   /// Called when a [Member] is added to the channel the current user is subscribed to.
   ///
-  /// You could obtain the [Channel] where it was added by using [Member.channel].
+  /// You could obtain the [Channel] where it was added by using [Member.getChannel].
   Stream<Member> onMemberAdded;
 
   final StreamController<MemberUpdatedEvent> _onMemberUpdatedCtrl = StreamController<MemberUpdatedEvent>.broadcast();
 
   /// Called when a [Member] is changed in the channel the current user is subscribed to.
   ///
-  /// You could obtain the [Channel] where it was updated by using [Member.channel].
+  /// You could obtain the [Channel] where it was updated by using [Member.getChannel].
   /// [Member] change events include body updates and attribute updates.
   Stream<MemberUpdatedEvent> onMemberUpdated;
 
@@ -176,7 +190,7 @@ class Channel {
 
   /// Called when a [Member] is deleted from the channel the current user is subscribed to.
   ///
-  /// You could obtain the [Channel] where it was deleted by using [Member.channel].
+  /// You could obtain the [Channel] where it was deleted by using [Member.getChannel].
   Stream<Member> onMemberDeleted;
   //#endregion
 
@@ -208,7 +222,6 @@ class Channel {
     this._type,
     this._attributes,
   )   : assert(_sid != null),
-        assert(_createdBy != null),
         assert(_type != null),
         assert(_attributes != null) {
     onMessageAdded = _onMessageAddedCtrl.stream;
@@ -221,6 +234,8 @@ class Channel {
     onTypingEnded = _onTypingEndedCtrl.stream;
     onSynchronizationChanged = _onSynchronizationChangedCtrl.stream;
 
+    _messages = Messages(this);
+    _members = Members(_sid);
     _channelStreams[_sid] ??= EventChannel('twilio_programmable_chat/$_sid').receiveBroadcastStream(0);
     _channelStreams[_sid].listen(_parseEvents);
   }
@@ -435,20 +450,16 @@ class Channel {
   /// Update properties from a map.
   void _updateFromMap(Map<String, dynamic> map) {
     _synchronizationStatus = EnumToString.fromString(ChannelSynchronizationStatus.values, map['synchronizationStatus']);
+    if (_synchronizationStatus == ChannelSynchronizationStatus.ALL) {
+      _hasSynchronized = true;
+    }
 
     if (map['messages'] != null) {
       final messagesMap = Map<String, dynamic>.from(map['messages']);
-      _messages ??= Messages._fromMap(messagesMap, this);
       _messages._updateFromMap(messagesMap);
     }
 
     _status = EnumToString.fromString(ChannelStatus.values, map['status']);
-
-    if (map['members'] != null) {
-      final membersMap = Map<String, dynamic>.from(map['members']);
-      _members ??= Members._fromMap(membersMap);
-      _members._updateFromMap(membersMap);
-    }
 
     _dateUpdated = map['dateUpdated'] != null ? DateTime.parse(map['dateUpdated']) : null;
     _lastMessageDate = map['lastMessageDate'] != null ? DateTime.parse(map['lastMessageDate']) : null;

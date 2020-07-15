@@ -33,6 +33,20 @@ class JoinForm extends StatefulWidget {
 
 class _JoinFormState extends State<JoinForm> {
   final TextEditingController _nameController = TextEditingController();
+  VoidCallback _listener;
+
+  @override
+  void initState() {
+    super.initState();
+    _listener = () => widget.joinBloc.updateIdentity(_nameController.text);
+    _nameController.addListener(_listener);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _nameController.removeListener(_listener);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +69,7 @@ class _JoinFormState extends State<JoinForm> {
     return <Widget>[
       TextField(
         decoration: InputDecoration(
-          labelText: 'Enter chat identity',
+          labelText: 'Enter Username',
           enabled: !chatModel.isLoading,
         ),
         controller: _nameController,
@@ -78,7 +92,7 @@ class _JoinFormState extends State<JoinForm> {
     return chatModel.isLoading
         ? const Center(child: CircularProgressIndicator())
         : FlatButton(
-            onPressed: chatModel.canSubmit && !chatModel.isLoading ? () => _submit() : null,
+            onPressed: chatModel.canSubmit && !chatModel.isLoading ? _submit : null,
             child: const Text('JOIN'),
             color: Theme.of(context).appBarTheme?.color ?? Theme.of(context).primaryColor,
             textColor: Theme.of(context).appBarTheme?.textTheme?.headline6?.color ?? Colors.white,

@@ -43,7 +43,7 @@ class TwilioProgrammableChatPlugin : FlutterPlugin {
         @JvmStatic
         val LOG_TAG = "Twilio_PChat"
 
-        var mediaProgresSink: EventChannel.EventSink? = null
+        var mediaProgressSink: EventChannel.EventSink? = null
 
         var loggingSink: EventChannel.EventSink? = null
 
@@ -91,12 +91,12 @@ class TwilioProgrammableChatPlugin : FlutterPlugin {
         mediaProgressChannel.setStreamHandler(object : EventChannel.StreamHandler {
             override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
                 debug("TwilioProgrammableChatPlugin.onAttachedToEngine => MediaProgress eventChannel attached")
-                mediaProgresSink = events
+                mediaProgressSink = events
             }
 
             override fun onCancel(arguments: Any) {
                 debug("TwilioProgrammableChatPlugin.onAttachedToEngine => MediaProgress eventChannel detached")
-                mediaProgresSink = null
+                mediaProgressSink = null
             }
         })
 

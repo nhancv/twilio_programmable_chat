@@ -14,6 +14,8 @@ class TwilioProgrammableChat {
 
   static bool _dartDebug = false;
 
+  static ChatClient chatClient;
+
   static Exception _convertException(PlatformException err) {
     var code = int.tryParse(err.code);
     // If code is an integer, then it is a Twilio ErrorInfo exception.
@@ -40,11 +42,16 @@ class TwilioProgrammableChat {
   /// Enable debug logging.
   ///
   /// For native logging set [native] to `true` and for dart set [dart] to `true`.
-  static Future<void> debug({bool dart = false, bool native = false}) async {
+  static Future<void> debug({
+    bool dart = false,
+    bool native = false,
+    bool sdk = false,
+  }) async {
     assert(dart != null);
     assert(native != null);
+    assert(sdk != null);
     _dartDebug = dart;
-    await _methodChannel.invokeMethod('debug', {'native': native});
+    await _methodChannel.invokeMethod('debug', {'native': native, 'sdk': sdk});
     if (native && _loggingStream == null) {
       _loggingStream = _loggingChannel.receiveBroadcastStream().listen((dynamic event) {
         if (native) {
@@ -66,7 +73,8 @@ class TwilioProgrammableChat {
     try {
       final methodData = await _methodChannel.invokeMethod('create', <String, Object>{'token': token, 'properties': properties._toMap()});
       final chatClientMap = Map<String, dynamic>.from(methodData);
-      return ChatClient._fromMap(chatClientMap);
+      chatClient = ChatClient._fromMap(chatClientMap);
+      return chatClient;
     } on PlatformException catch (err) {
       throw TwilioProgrammableChat._convertException(err);
     }

@@ -7,7 +7,6 @@ import com.twilio.chat.Channels
 import com.twilio.chat.ChatClient
 import com.twilio.chat.ErrorInfo
 import com.twilio.chat.Member
-import com.twilio.chat.Members
 import com.twilio.chat.Message
 import com.twilio.chat.Messages
 import com.twilio.chat.Paginator
@@ -95,7 +94,6 @@ object Mapper {
 
     fun chatClientToMap(chatClient: ChatClient): Map<String, Any> {
         return mapOf(
-                "properties" to propertiesToMap(chatClient.properties),
                 "channels" to channelsToMap(chatClient.channels),
                 "myIdentity" to chatClient.myIdentity,
                 "connectionState" to chatClient.connectionState.toString(),
@@ -111,13 +109,6 @@ object Mapper {
         )
     }
 
-    private fun propertiesToMap(properties: ChatClient.Properties): Map<String, Any> {
-        return mapOf(
-                "region" to properties.region,
-                "deferCA" to properties.deferCA
-        )
-    }
-
     private fun channelsToMap(channels: Channels): Map<String, Any> {
         val subscribedChannelsMap = channels.subscribedChannels.map { channelToMap(it) }
         return mapOf(
@@ -125,8 +116,8 @@ object Mapper {
         )
     }
 
-    fun channelToMap(channel: Channel?, compareChannel: Channel? = null): Map<String, Any?>? {
-        if (channel == null || compareChannel != null && channel.sid == compareChannel.sid) {
+    fun channelToMap(channel: Channel?): Map<String, Any?>? {
+        if (channel == null) {
             return null
         }
 
@@ -154,7 +145,6 @@ object Mapper {
                 "messages" to messagesToMap(channel.messages),
                 "attributes" to attributesToMap(channel.attributes),
                 "status" to channel.status.toString(),
-                "members" to membersToMap(channel.members, channel),
                 "synchronizationStatus" to channel.synchronizationStatus.toString(),
                 "dateCreated" to dateToString(channel.dateCreatedAsDate),
                 "createdBy" to channel.createdBy,
@@ -202,31 +192,32 @@ object Mapper {
                 "messageIndex" to message.messageIndex,
                 "type" to message.type.toString(),
                 "hasMedia" to message.hasMedia(),
-                "media" to mediaToMap(message.media),
+                "media" to mediaToMap(message.media, message.messageIndex, message.channelSid),
                 "attributes" to attributesToMap(message.attributes)
         )
     }
 
-    private fun mediaToMap(media: Message.Media?): Map<String, Any>? {
+    private fun mediaToMap(media: Message.Media?, messageIndex: Long, channelSid: String): Map<String, Any>? {
         if (media == null) return null
         return mapOf(
                 "sid" to media.sid,
                 "fileName" to media.fileName,
                 "type" to media.type,
-                "size" to media.size
+                "size" to media.size,
+                "channelSid" to channelSid,
+                "messageIndex" to messageIndex
         )
     }
 
-    fun membersToMap(members: Members?, partOfChannel: Channel): Map<String, Any?>? {
-        if (members == null) return null
-        val membersListMap = members.membersList.map { memberToMap(it, partOfChannel) }
+    fun membersListToMap(members: List<Member>): Map<String, List<Map<String, Any?>?>> {
+        val membersListMap = members.map { memberToMap(it) }
         return mapOf(
-                "channelSid" to members.channel.sid,
-                "membersList" to membersListMap
+            "membersList" to membersListMap
         )
     }
 
-    fun memberToMap(member: Member, partOfChannel: Channel? = null): Map<String, Any?> {
+    fun memberToMap(member: Member?): Map<String, Any?>? {
+        if (member == null) return null
         return mapOf(
                 "sid" to member.sid,
                 "lastConsumedMessageIndex" to member.lastConsumedMessageIndex,

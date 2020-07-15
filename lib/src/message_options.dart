@@ -84,7 +84,7 @@ class MessageOptions {
   //#endregion
 
   /// Create map from properties.
-  Map<String, dynamic> _toMap() {
+  Map<String, dynamic> toMap() {
     return {
       'body': _body,
       'attributes': _attributes,

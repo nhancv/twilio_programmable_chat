@@ -5,8 +5,6 @@ part of twilio_programmable_chat;
 /// Unlike [User], this information won't be updated in realtime. To have refreshed data, user should query user descriptors again.
 /// From the user descriptor you could obtain full [User] object by calling [UserDescriptor.subscribe].
 class UserDescriptor {
-  final Users _users;
-
   final String _friendlyName;
 
   final Attributes _attributes;
@@ -42,28 +40,26 @@ class UserDescriptor {
     return _isNotifiable;
   }
 
-  UserDescriptor(this._friendlyName, this._attributes, this._identity, this._isOnline, this._isNotifiable, this._users)
-      : assert(_friendlyName != null),
-        assert(_attributes != null),
+  UserDescriptor(this._friendlyName, this._attributes, this._identity, this._isOnline, this._isNotifiable)
+      : assert(_attributes != null),
         assert(_identity != null),
         assert(_isOnline != null),
-        assert(_isNotifiable != null),
-        assert(_users != null);
+        assert(_isNotifiable != null);
 
   /// Construct from a map.
-  factory UserDescriptor._fromMap(Map<String, dynamic> map, Users users) {
+  factory UserDescriptor._fromMap(Map<String, dynamic> map) {
     return UserDescriptor(
       map['friendlyName'],
       Attributes.fromMap(map['attributes'].cast<String, dynamic>()),
       map['identity'],
       map['isOnline'],
       map['isNotifiable'],
-      users,
     );
   }
 
   /// Subscribe to the user object.
   Future<User> subscribe() async {
-    return _users.getAndSubscribeUser(_identity);
+    final user = await TwilioProgrammableChat.chatClient.users?.getAndSubscribeUser(_identity);
+    return user;
   }
 }

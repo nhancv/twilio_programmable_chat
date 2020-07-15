@@ -33,7 +33,7 @@ void main() {
       expect(methodCalls, <Matcher>[
         isMethodCall(
           'debug',
-          arguments: <String, bool>{'native': false},
+          arguments: <String, bool>{'native': false, 'sdk': false},
         )
       ]);
     });
@@ -45,7 +45,7 @@ void main() {
       expect(methodCalls, <Matcher>[
         isMethodCall(
           'debug',
-          arguments: <String, bool>{'native': false},
+          arguments: <String, bool>{'native': false, 'sdk': false},
         )
       ]);
     });

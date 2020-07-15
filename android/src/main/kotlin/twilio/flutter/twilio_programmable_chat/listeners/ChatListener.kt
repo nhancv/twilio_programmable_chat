@@ -76,7 +76,7 @@ class ChatListener(val token: String, val properties: ChatClient.Properties) : C
 
     override fun onNewMessageNotification(channelSid: String?, messageSid: String?, messageIndex: Long) {
         TwilioProgrammableChatPlugin.debug("ChatListener.onNewMessageNotification => channelSid = $channelSid, messageSid = $messageSid, messageIndex = $messageIndex")
-        sendEvent("invitedToChannelNotification", mapOf(
+        sendEvent("newMessageNotification", mapOf(
                 "channelSid" to channelSid,
                 "messageSid" to messageSid,
                 "messageIndex" to messageIndex

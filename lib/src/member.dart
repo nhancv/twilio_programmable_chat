@@ -35,13 +35,6 @@ class Member {
     return _lastConsumptionTimestamp;
   }
 
-  /// Returns the channel this member belong<s to.
-  Future<Channel> get channel async {
-    final channelData = await TwilioProgrammableChat._methodChannel.invokeMethod('Member#getChannel', {'channelSid': _channelSid});
-    final channelMap = Map<String, dynamic>.from(channelData);
-    return Channel._fromMap(channelMap);
-  }
-
   /// Returns user identity for the current member.
   String get identity {
     return _identity;
@@ -66,33 +59,44 @@ class Member {
 
   /// Construct from a map.
   factory Member._fromMap(Map<String, dynamic> map) {
-    var member = Member(
-      map['sid'],
-      EnumToString.fromString(MemberType.values, map['type']),
-      map['channelSid'],
-      Attributes.fromMap(map['attributes'].cast<String, dynamic>()),
-    );
-    member._updateFromMap(map);
-    return member;
+    if (map != null) {
+      var member = Member(
+        map['sid'],
+        EnumToString.fromString(MemberType.values, map['type']),
+        map['channelSid'],
+        Attributes.fromMap(map['attributes'].cast<String, dynamic>()),
+      );
+      member._updateFromMap(map);
+      return member;
+    } else {
+      return null;
+    }
   }
 
   //#region Public API methods
+  /// Returns the channel this member belong<s to.
+  Future<Channel> getChannel() async {
+    var channel = await TwilioProgrammableChat.chatClient.channels.getChannel(_channelSid);
+    return channel;
+  }
+
   /// Return user descriptor for current member.
   Future<UserDescriptor> getUserDescriptor() async {
-    throw UnimplementedError('getUserDescriptor');
-//    try {
-//      final methodData = await TwilioProgrammableChat._methodChannel.invokeMethod('Member#getUserDescriptor', {'memberSid': _sid, 'channelSid': _channel.sid});
-//      final userDescriptorMap = Map<String, dynamic>.from(methodData);
-//      return UserDescriptor._fromMap(userDescriptorMap);
-//    } on PlatformException catch (err) {
-//      throw TwilioProgrammableChat._convertException(err);
-//    }
+    final userDescriptorData = await TwilioProgrammableChat._methodChannel.invokeMethod('Member#getUserDescriptor', {
+      'identity': _identity,
+      'channelSid': _channelSid,
+    });
+    final userDescriptor = UserDescriptor._fromMap(userDescriptorData.cast<String, dynamic>());
+    return userDescriptor;
   }
 
   /// Return subscribed user object for current member.
   Future<User> getAndSubscribeUser() async {
     try {
-      final methodData = await TwilioProgrammableChat._methodChannel.invokeMethod('Member#getAndSubscribeUser', {'memberSid': _sid, 'channelSid': _channelSid});
+      final methodData = await TwilioProgrammableChat._methodChannel.invokeMethod('Member#getAndSubscribeUser', {
+        'memberSid': _sid,
+        'channelSid': _channelSid,
+      });
       final userMap = Map<String, dynamic>.from(methodData);
       return User._fromMap(userMap);
     } on PlatformException catch (err) {

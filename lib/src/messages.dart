@@ -16,19 +16,12 @@ class Messages {
 
   Messages(this._channel) : assert(_channel != null);
 
-  /// Construct from a map.
-  factory Messages._fromMap(Map<String, dynamic> map, Channel channel) {
-    var messages = Messages(channel);
-    messages._updateFromMap(map);
-    return messages;
-  }
-
   //#region Public API methods
   /// Sends a message to the channel.
   Future<Message> sendMessage(MessageOptions options) async {
     try {
       final methodData = await TwilioProgrammableChat._methodChannel.invokeMethod('Messages#sendMessage', {
-        'options': options._toMap(),
+        'options': options.toMap(),
         'channelSid': _channel.sid,
       });
       final messageMap = Map<String, dynamic>.from(methodData);

@@ -73,14 +73,13 @@ class Paginator<T> {
             assert(_passOn['users'] != null);
             item = (_items as List<UserDescriptor>).firstWhere(
               (c) => c._identity == itemMap['identity'],
-              orElse: () => UserDescriptor._fromMap(itemMap, _passOn['users']),
+              orElse: () => UserDescriptor._fromMap(itemMap),
             );
             break;
           case 'channelDescriptor':
-            assert(_passOn['channels'] != null);
             item = (_items as List<ChannelDescriptor>).firstWhere(
               (c) => c._sid == itemMap['sid'],
-              orElse: () => ChannelDescriptor._fromMap(itemMap, _passOn['channels']),
+              orElse: () => ChannelDescriptor._fromMap(itemMap),
             );
             break;
         }

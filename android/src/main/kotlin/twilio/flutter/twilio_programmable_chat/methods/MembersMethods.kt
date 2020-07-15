@@ -27,6 +27,45 @@ object MembersMethods {
         })
     }
 
+    fun getMembersList(call: MethodCall, result: MethodChannel.Result) {
+        val channelSid = call.argument<String>("channelSid")
+                ?: return result.error("ERROR", "Missing 'channelSid'", null)
+
+        TwilioProgrammableChatPlugin.chatListener.chatClient?.channels?.getChannel(channelSid, object : CallbackListener<Channel>() {
+            override fun onSuccess(channel: Channel) {
+                TwilioProgrammableChatPlugin.debug("MembersMethods.getMembersList (Channels.getChannel) => onSuccess")
+                val membersListMap = Mapper.membersListToMap(channel.members.membersList)
+                result.success(membersListMap)
+            }
+
+            override fun onError(errorInfo: ErrorInfo) {
+                TwilioProgrammableChatPlugin.debug("MembersMethods.getMembersList (Channels.getChannel) onError: $errorInfo")
+                result.error("${errorInfo.code}", errorInfo.message, errorInfo.status)
+            }
+        })
+    }
+
+    fun getMember(call: MethodCall, result: MethodChannel.Result) {
+        val channelSid = call.argument<String>("channelSid")
+                ?: return result.error("ERROR", "Missing 'channelSid'", null)
+
+        val identity = call.argument<String>("identity")
+                ?: return result.error("ERROR", "Missing 'identity'", null)
+
+        TwilioProgrammableChatPlugin.chatListener.chatClient?.channels?.getChannel(channelSid, object : CallbackListener<Channel>() {
+            override fun onSuccess(channel: Channel) {
+                TwilioProgrammableChatPlugin.debug("MembersMethods.getMember (Channels.getChannel) => onSuccess")
+                val memberMap = Mapper.memberToMap(channel.members.getMember(identity))
+                result.success(memberMap)
+            }
+
+            override fun onError(errorInfo: ErrorInfo) {
+                TwilioProgrammableChatPlugin.debug("MembersMethods.getMember (Channels.getChannel) onError: $errorInfo")
+                result.error("${errorInfo.code}", errorInfo.message, errorInfo.status)
+            }
+        })
+    }
+
     fun addByIdentity(call: MethodCall, result: MethodChannel.Result) {
         val identity = call.argument<String>("identity")
                 ?: return result.error("ERROR", "Missing 'identity'", null)
@@ -39,7 +78,7 @@ object MembersMethods {
                 channel.members.addByIdentity(identity, object : StatusListener() {
                     override fun onSuccess() {
                         TwilioProgrammableChatPlugin.debug("MembersMethods.addByIdentity (Members.addByIdentity) => onSuccess")
-                        result.success(Mapper.membersToMap(channel.members, channel))
+                        result.success(true)
                     }
 
                     override fun onError(errorInfo: ErrorInfo) {
@@ -68,7 +107,7 @@ object MembersMethods {
                 channel.members.inviteByIdentity(identity, object : StatusListener() {
                     override fun onSuccess() {
                         TwilioProgrammableChatPlugin.debug("MembersMethods.inviteByIdentity (Members.inviteByIdentity) => onSuccess")
-                        result.success(Mapper.membersToMap(channel.members, channel))
+                        result.success(true)
                     }
 
                     override fun onError(errorInfo: ErrorInfo) {
@@ -97,7 +136,7 @@ object MembersMethods {
                 channel.members.removeByIdentity(identity, object : StatusListener() {
                     override fun onSuccess() {
                         TwilioProgrammableChatPlugin.debug("MembersMethods.removeByIdentity (Members.removeByIdentity) => onSuccess")
-                        result.success(Mapper.membersToMap(channel.members, channel))
+                        result.success(true)
                     }
 
                     override fun onError(errorInfo: ErrorInfo) {

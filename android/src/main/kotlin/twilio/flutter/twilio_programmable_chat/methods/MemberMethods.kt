@@ -34,14 +34,14 @@ object MemberMethods {
         val channelSid = call.argument<String>("channelSid")
                 ?: return result.error("ERROR", "Missing 'channelSid'", null)
 
-        val memberSid = call.argument<String>("memberSid")
-                ?: return result.error("ERROR", "Missing 'memberSid'", null)
+        val identity = call.argument<String>("identity")
+                ?: return result.error("ERROR", "Missing 'identity'", null)
 
         try {
             TwilioProgrammableChatPlugin.chatListener.chatClient?.channels?.getChannel(channelSid, object : CallbackListener<Channel>() {
                 override fun onSuccess(channel: Channel) {
                     TwilioProgrammableChatPlugin.debug("MemberMethods.getUserDescriptor => onSuccess")
-                    val member = channel.members.membersList.find { it.sid == memberSid }
+                    val member = channel.members.membersList.find { it.identity == identity }
                     if (member != null) {
                         member.getUserDescriptor(object : CallbackListener<UserDescriptor>() {
                             override fun onSuccess(userDescriptor: UserDescriptor) {
@@ -55,7 +55,7 @@ object MemberMethods {
                             }
                         })
                     } else {
-                        return result.error("ERROR", "No member found on channel '$channelSid' with sid '$memberSid'", null)
+                        return result.error("ERROR", "No member found on channel '$channelSid' with identity '$identity'", null)
                     }
                 }
 

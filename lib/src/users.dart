@@ -47,10 +47,15 @@ class Users {
     try {
       final methodData = await TwilioProgrammableChat._methodChannel.invokeMethod('Users#getUserDescriptor', {'identity': identity});
       final userDescriptorMap = Map<String, dynamic>.from(methodData);
-      return UserDescriptor._fromMap(userDescriptorMap, this);
+      return UserDescriptor._fromMap(userDescriptorMap);
     } on PlatformException catch (err) {
       throw TwilioProgrammableChat._convertException(err);
     }
+  }
+
+  /// Retrieve user by id from the list of subscribe users
+  User getUserById(String id) {
+    return subscribedUsers.firstWhere((u) => u.identity == id, orElse: () => null);
   }
 
   /// Get user based on user identity and subscribe to real-time updates for this user.

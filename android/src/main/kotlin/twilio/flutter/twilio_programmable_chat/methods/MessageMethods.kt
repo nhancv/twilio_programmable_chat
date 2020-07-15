@@ -4,9 +4,11 @@ import com.twilio.chat.CallbackListener
 import com.twilio.chat.Channel
 import com.twilio.chat.ErrorInfo
 import com.twilio.chat.Message
+import com.twilio.chat.ProgressListener
 import com.twilio.chat.StatusListener
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import java.io.File
 import org.json.JSONException
 import twilio.flutter.twilio_programmable_chat.Mapper
 import twilio.flutter.twilio_programmable_chat.TwilioProgrammableChatPlugin
@@ -33,7 +35,7 @@ object MessageMethods {
         val channelSid = call.argument<String>("channelSid")
                 ?: return result.error("ERROR", "Missing 'channelSid'", null)
 
-        val messageIndex = call.argument<Long>("messageIndex")
+        val messageIndex = call.argument<Int>("messageIndex")?.toLong()
                 ?: return result.error("ERROR", "Missing 'messageIndex'", null)
 
         val body = call.argument<String>("body")
@@ -78,7 +80,7 @@ object MessageMethods {
         val channelSid = call.argument<String>("channelSid")
                 ?: return result.error("ERROR", "Missing 'channelSid'", null)
 
-        val messageIndex = call.argument<Long>("messageIndex")
+        val messageIndex = call.argument<Int>("messageIndex")?.toLong()
                 ?: return result.error("ERROR", "Missing 'messageIndex'", null)
 
         // Not erroring out because a nullable attributes is allowed to reset the Channel attributes.
@@ -128,6 +130,67 @@ object MessageMethods {
             })
         } catch (err: IllegalArgumentException) {
             return result.error("IllegalArgumentException", err.message, null)
+        }
+    }
+
+    fun getMedia(call: MethodCall, result: MethodChannel.Result) {
+        val channelSid = call.argument<String>("channelSid")
+                ?: return result.error("ERROR", "Missing 'channelSid'", null)
+
+        val messageIndex = call.argument<Int>("messageIndex")?.toLong()
+                ?: return result.error("ERROR", "Missing 'messageIndex'", null)
+
+        val path = call.argument<String>("filePath")
+                ?: return result.error("ERROR", "Missing 'filePath'", null)
+
+        val file = File(path)
+        if (file.exists() && file.length() > 0) {
+            result.success(true)
+        } else {
+            TwilioProgrammableChatPlugin.debug("Downloading media for message $messageIndex to path: $path")
+            TwilioProgrammableChatPlugin.chatListener.chatClient?.channels?.getChannel(channelSid, object : CallbackListener<Channel>() {
+                override fun onSuccess(channel: Channel) {
+                    TwilioProgrammableChatPlugin.debug("MessageMethods.getMedia => onSuccess")
+                    channel.messages.getMessageByIndex(messageIndex, object : CallbackListener<Message>() {
+                        override fun onSuccess(message: Message) {
+                            TwilioProgrammableChatPlugin.debug("MessageMethods.getMedia (Messages.getMessageByIndex) => onSuccess")
+                            message.media.download(file.outputStream(), object : StatusListener() {
+                                override fun onSuccess() {
+                                    TwilioProgrammableChatPlugin.debug("MessageMethods.getMedia (Message.Media.download) => onSuccess")
+                                    result.success(true)
+                                }
+
+                                override fun onError(errorInfo: ErrorInfo) {
+                                    TwilioProgrammableChatPlugin.debug("MessageMethods.getMedia (Message.Media.download) => onError: $errorInfo")
+                                    result.error("${errorInfo.code}", errorInfo.message, errorInfo.status)
+                                }
+                            }, object : ProgressListener() {
+                                override fun onStarted() {
+                                    TwilioProgrammableChatPlugin.debug("MessageMethods.getMedia (Message.Media.download) => onStarted")
+                                }
+
+                                override fun onProgress(bytes: Long) {
+                                    TwilioProgrammableChatPlugin.debug("MessageMethods.getMedia (Message.Media.download) => onProgress: $bytes")
+                                }
+
+                                override fun onCompleted(mediaSid: String?) {
+                                    TwilioProgrammableChatPlugin.debug("MessageMethods.getMedia (Message.Media.download) => onCompleted: $mediaSid")
+                                }
+                            })
+                        }
+
+                        override fun onError(errorInfo: ErrorInfo) {
+                            TwilioProgrammableChatPlugin.debug("MessageMethods.updateMessageBody (Messages.getMessageByIndex) => onError: $errorInfo")
+                            result.error("${errorInfo.code}", errorInfo.message, errorInfo.status)
+                        }
+                    })
+                }
+
+                override fun onError(errorInfo: ErrorInfo) {
+                    TwilioProgrammableChatPlugin.debug("MessageMethods.getMedia => onError: $errorInfo")
+                    result.error("${errorInfo.code}", errorInfo.message, errorInfo.status)
+                }
+            })
         }
     }
 }

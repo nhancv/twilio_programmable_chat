@@ -1,3 +1,3 @@
 ## 0.1.0
 
-* Initial Android release
+* Initial iOS & Android release

@@ -35,14 +35,16 @@ class NewMessageNotificationEvent {
 }
 //#endregion
 
+//#region Enum
+enum PushNotificationPlatform { FCM, GCM, APNS }
+//#endregion
+
 /// Chat client - main entry point for the Chat SDK.
 class ChatClient {
   /// Stream for the native chat events.
   StreamSubscription<dynamic> _chatStream;
 
   //#region Private API properties
-  Properties _properties;
-
   Channels _channels;
 
   ConnectionState _connectionState;
@@ -55,11 +57,6 @@ class ChatClient {
   //#endregion
 
   //#region Public API properties
-  /// Get properties for current client.
-  Properties get properties {
-    return _properties;
-  }
-
   /// [Channels] available to the current client.
   Channels get channels {
     return _channels;
@@ -251,18 +248,42 @@ class ChatClient {
       throw TwilioProgrammableChat._convertException(err);
     }
   }
+//
+//  /// Registers for push notifications. Supported push notification platform(s) vary based on host OS
+//  Future<void> registerForNotification(String token, PushNotificationPlatform platform) async {
+////    assert(token != null, token.isNotEmpty);
+//    assert(platform != null);
+//
+//    try {
+//      await TwilioProgrammableChat._methodChannel.invokeMethod('ChatClient#registerForNotification', <String, String>{
+////        'token': token,
+//        'platform': EnumToString.parse(platform),
+//      });
+//    } on PlatformException catch (err) {
+//      throw TwilioProgrammableChat._convertException(err);
+//    }
+//  }
+//
+//  /// Unregisters for push notifications. Supported push notification platform(s) vary based on host OS
+//  Future<void> unregisterForNotification(String token, PushNotificationPlatform platform) async {
+////    assert(token != null, token.isNotEmpty);
+//    assert(platform != null);
+//
+//    try {
+//      await TwilioProgrammableChat._methodChannel.invokeMethod('ChatClient#unregisterForNotification', <String, String>{
+////        'token': token,
+//        'platform': EnumToString.parse(platform),
+//      });
+//    } on PlatformException catch (err) {
+//      throw TwilioProgrammableChat._convertException(err);
+//    }
+//  }
   //#endregion
 
   /// Update properties from a map.
   void _updateFromMap(Map<String, dynamic> map) {
     _connectionState = EnumToString.fromString(ConnectionState.values, map['connectionState']);
     _isReachabilityEnabled = map['isReachabilityEnabled'];
-
-    if (map['properties'] != null) {
-      final propertiesMap = Map<String, dynamic>.from(map['properties']);
-      _properties ??= Properties._fromMap(propertiesMap);
-      _properties._updateFromMap(propertiesMap);
-    }
 
     if (map['channels'] != null) {
       final channelsMap = Map<String, dynamic>.from(map['channels']);
@@ -294,18 +315,14 @@ class ChatClient {
       exception = ErrorInfo(errorMap['code'] as int, errorMap['message'], errorMap['status'] as int);
     }
 
-    Channel channel;
+    Map<String, dynamic> channelMap;
     if (data['channel'] != null) {
-      final channelMap = Map<String, dynamic>.from(data['channel'] as Map<dynamic, dynamic>);
-      // TODO(WLFN): should we cache this so we can just use references?
-      channel = Channel._fromMap(channelMap);
+      channelMap = Map<String, dynamic>.from(data['channel'] as Map<dynamic, dynamic>);
     }
 
-    User user;
+    Map<String, dynamic> userMap;
     if (data['user'] != null) {
-      final userMap = Map<String, dynamic>.from(data['user'] as Map<dynamic, dynamic>);
-      // TODO(WLFN): should we cache this so we can just use references?
-      user = User._fromMap(userMap);
+      userMap = Map<String, dynamic>.from(data['user'] as Map<dynamic, dynamic>);
     }
 
     var channelSid = data['channelSid'] as String;
@@ -313,14 +330,7 @@ class ChatClient {
     dynamic reason;
     if (data['reason'] != null) {
       final reasonMap = Map<String, dynamic>.from(data['reason'] as Map<dynamic, dynamic>);
-      switch (reasonMap['type']) {
-        case 'channel':
-          reason = EnumToString.fromString(ChannelUpdateReason.values, reasonMap['value']);
-          break;
-        case 'user':
-          reason = EnumToString.fromString(ChannelUpdateReason.values, reasonMap['value']);
-          break;
-      }
+      reason = EnumToString.fromString(ChannelUpdateReason.values, reasonMap['value']);
     }
 
     switch (eventName) {
@@ -329,29 +339,40 @@ class ChatClient {
         _onAddedToChannelNotificationCtrl.add(channelSid);
         break;
       case 'channelAdded':
-        assert(channel != null);
-        _onChannelAddedCtrl.add(channel);
+        assert(channelMap != null);
+        Channels._updateChannelFromMap(channelMap);
+        _onChannelAddedCtrl.add(Channels._channelsMap[channelMap['sid']]);
         break;
       case 'channelDeleted':
-        assert(channel != null);
+        assert(channelMap != null);
+        var channel = Channels._channelsMap[channelMap['sid']];
+        Channels._channelsMap[channelMap['sid']] = null;
+        channel._updateFromMap(channelMap);
         _onChannelDeletedCtrl.add(channel);
         break;
       case 'channelInvited':
-        assert(channel != null);
-        _onChannelInvitedCtrl.add(channel);
+        assert(channelMap != null);
+        Channels._updateChannelFromMap(channelMap);
+        _onChannelInvitedCtrl.add(Channels._channelsMap[channelMap['sid']]);
         break;
       case 'channelJoined':
-        assert(channel != null);
-        _onChannelJoinedCtrl.add(channel);
+        assert(channelMap != null);
+        Channels._updateChannelFromMap(channelMap);
+        _onChannelJoinedCtrl.add(Channels._channelsMap[channelMap['sid']]);
         break;
       case 'channelSynchronizationChange':
-        assert(channel != null);
-        _onChannelSynchronizationChangeCtrl.add(channel);
+        assert(channelMap != null);
+        Channels._updateChannelFromMap(channelMap);
+        _onChannelSynchronizationChangeCtrl.add(Channels._channelsMap[channelMap['sid']]);
         break;
       case 'channelUpdated':
-        assert(channel != null);
+        assert(channelMap != null);
         assert(reason != null);
-        _onChannelUpdatedCtrl.add(ChannelUpdatedEvent(channel, reason));
+        Channels._updateChannelFromMap(channelMap);
+        _onChannelUpdatedCtrl.add(ChannelUpdatedEvent(
+          Channels._channelsMap[channelMap['sid']],
+          reason,
+        ));
         break;
       case 'clientSynchronization':
         var synchronizationStatus = EnumToString.fromString(ChatClientSynchronizationStatus.values, data['synchronizationStatus']);
@@ -395,17 +416,24 @@ class ChatClient {
         _onTokenExpiredCtrl.add(null);
         break;
       case 'userSubscribed':
-        assert(user != null);
-        _onUserSubscribedCtrl.add(user);
+        assert(userMap != null);
+        users._updateFromMap({
+          'subscribedUsers': [userMap]
+        });
+        _onUserSubscribedCtrl.add(users.getUserById(userMap['identity']));
         break;
       case 'userUnsubscribed':
-        assert(user != null);
+        assert(userMap != null);
+        var user = users.getUserById(userMap['identity']);
+        user._updateFromMap(userMap);
+        users.subscribedUsers.removeWhere((u) => u.identity == userMap['identity']);
         _onUserUnsubscribedCtrl.add(user);
         break;
       case 'userUpdated':
-        assert(user != null);
+        assert(userMap != null);
         assert(reason != null);
-        _onUserUpdatedCtrl.add(UserUpdatedEvent(user, reason));
+        users._updateFromMap({'subscribedUsers': userMap});
+        _onUserUpdatedCtrl.add(UserUpdatedEvent(users.getUserById(userMap['identity']), reason));
         break;
       default:
         TwilioProgrammableChat._log("Event '$eventName' not yet implemented");
