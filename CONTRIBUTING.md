@@ -53,3 +53,36 @@ If the contribution doesn't meet these criteria, a maintainer will discuss it wi
 * `dartdoc` can be found here: `<FLUTTER_INSTALL_DIR>/bin/cache/dart-sdk/bin/dartdoc`
 * Generate docs with the following command: `dartdoc --no-auto-include-dependencies --quiet`
 * Output will be placed into `doc/api/`
+
+# Communicating between Dart and Native
+
+The communication between Native code and Dart goes via EventChannels. Below you will find a table with all the currently identified events we want to implement and their implementation status.
+
+[Check this link](https://flutter.dev/docs/development/platform-integration/platform-channels?tab=ios-channel-swift-tab#codec) for more information on platform channel data types support and codecs.
+
+## Events table
+Reference table of all the events the plugin targets to support and their native platform counter part. (NEEDS UPDATING)
+
+| Type       | Event name                     | Android                          | Implemented |
+| :--------- | ------------------------------ | -------------------------------- | ----------- |
+| ChatClient | addedToChannelNotification     | onAddedToChannelNotification     |             |
+| ChatClient | channelAdded                   | onChannelAdded                   | X           | 
+| ChatClient | channelDeleted                 | onChannelDeleted                 | X           |
+| ChatClient | channelInvited                 | onChannelInvited                 | X           |
+| ChatClient | channelJoined                  | onChannelJoined                  | X           |
+| ChatClient | channelSynchronizationChange   | onChannelSynchronizationChange   | X           |
+| ChatClient | channelUpdated                 | onChannelUpdated                 | X           |
+| ChatClient | clientSynchronization          | onClientSynchronization          | X           |
+| ChatClient | connectionStateChange          | onConnectionStateChange          | X           |
+| ChatClient | error                          | onError                          | X           |
+| ChatClient | invitedToChannelNotification   | onInvitedToChannelNotification   |             |
+| ChatClient | newMessageNotification         | onNewMessageNotification         |             |
+| ChatClient | notificationSubscribed         | onNotificationSubscribed         | X           |
+| ChatClient | notificationFailed             | onNotificationFailed             | X           |
+| ChatClient | removedFromChannelNotification | onRemovedFromChannelNotification |             |
+| ChatClient | tokenAboutToExpire             | onTokenAboutToExpire             | X           |
+| ChatClient | onTokenExpired                 | onTokenExpired                   | X           |
+| ChatClient | userSubscribed                 | onUserSubscribed                 | X           |
+| ChatClient | userUnsubscribed               | onUserUnsubscribed               | X           |
+| ChatClient | userUpdated                    | onUserUpdated                    | X           |
+
