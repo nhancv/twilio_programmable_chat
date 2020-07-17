@@ -169,7 +169,7 @@ class Message {
   Future<Map<String, dynamic>> setAttributes(Map<String, dynamic> attributes) async {
     try {
       return Map<String, dynamic>.from(await TwilioProgrammableChat._methodChannel.invokeMethod('Message#setAttributes', {
-        'channelSid': _sid,
+        'channelSid': _channelSid,
         'messageIndex': _messageIndex,
         'attributes': attributes,
       }));
