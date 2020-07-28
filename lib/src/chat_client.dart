@@ -243,6 +243,7 @@ class ChatClient {
   Future<void> shutdown() async {
     try {
       await _chatStream.cancel();
+      TwilioProgrammableChat.chatClient = null;
       return await TwilioProgrammableChat._methodChannel.invokeMethod('ChatClient#shutdown', null);
     } on PlatformException catch (err) {
       throw TwilioProgrammableChat._convertException(err);

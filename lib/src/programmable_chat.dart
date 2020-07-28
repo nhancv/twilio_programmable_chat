@@ -70,6 +70,11 @@ class TwilioProgrammableChat {
     assert(token != '');
     assert(properties != null);
 
+    if (chatClient != null) {
+      throw UnsupportedError('Instantiation of multiple chatClients is not supported.'
+          ' Shutdown the existing chatClient before creating a new one');
+    }
+
     try {
       final methodData = await _methodChannel.invokeMethod('create', <String, Object>{'token': token, 'properties': properties._toMap()});
       final chatClientMap = Map<String, dynamic>.from(methodData);
