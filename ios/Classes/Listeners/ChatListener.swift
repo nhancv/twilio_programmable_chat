@@ -60,7 +60,7 @@ public class ChatListener: NSObject, TwilioChatClientDelegate {
     // onClientSynchronizationUpdated
     public func chatClient(_ client: TwilioChatClient, synchronizationStatusUpdated status: TCHClientSynchronizationStatus) {
         SwiftTwilioProgrammableChatPlugin.debug("ChatListener.onClientSynchronization => state is \(Mapper.clientSynchronizationStatusToString(status))")
-        sendEvent("connectionStateChange", data: ["synchronizationStatus": Mapper.clientSynchronizationStatusToString(status)])
+        sendEvent("clientSynchronization", data: ["synchronizationStatus": Mapper.clientSynchronizationStatusToString(status)])
     }
 
     // onConnectionStateChange
