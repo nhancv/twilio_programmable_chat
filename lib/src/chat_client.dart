@@ -304,7 +304,17 @@ class ChatClient {
     final String eventName = event['name'];
     TwilioProgrammableChat._log("ChatClient => Event '$eventName' => ${event["data"]}, error: ${event["error"]}");
     final data = event['data'] != null ? Map<String, dynamic>.from(event['data']) : null;
-    if(data == null) return;
+    if(data == null) {
+      switch (eventName) {
+        case 'tokenAboutToExpire':
+          _onTokenAboutToExpireCtrl.add(null);
+          break;
+        case 'tokenExpired':
+          _onTokenExpiredCtrl.add(null);
+          break;
+      }
+      return;
+    }
 
     if (data['chatClient'] != null) {
       final chatClientMap = Map<String, dynamic>.from(data['chatClient']);
@@ -410,12 +420,6 @@ class ChatClient {
       case 'removedFromChannelNotification':
         assert(channelSid != null);
         _onRemovedFromChannelNotificationCtrl.add(channelSid);
-        break;
-      case 'tokenAboutToExpire':
-        _onTokenAboutToExpireCtrl.add(null);
-        break;
-      case 'tokenExpired':
-        _onTokenExpiredCtrl.add(null);
         break;
       case 'userSubscribed':
         assert(userMap != null);
